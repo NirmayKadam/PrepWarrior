@@ -41,7 +41,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index.html", "/dashboard", "/dashboard/**", "/styles.css", "/*.js", "/favicon.ico").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
-                .requestMatchers("/api/newsletter").permitAll()
+                .requestMatchers("/api/newsletter", "/api/config/firebase.js").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
             )

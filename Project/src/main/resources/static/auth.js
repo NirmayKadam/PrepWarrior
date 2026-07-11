@@ -1,18 +1,5 @@
-// Firebase configuration fallback - Replace with actual credentials
-const firebaseConfig = {
-  apiKey: "AIzaSyAqYPfeBuHJdxdU5PXxXyYrBO46WvILOkg",
-  authDomain: "prepwarrior-467c4.firebaseapp.com",
-  projectId: "prepwarrior-467c4",
-  storageBucket: "prepwarrior-467c4.firebasestorage.app",
-  messagingSenderId: "525786522065",
-  appId: "1:525786522065:web:8fc2e89708ee575beac0f0",
-  measurementId: "G-TMQQLPW67T"
-};
+// Firebase is dynamically initialized via /api/config/firebase.js script tag
 
-// Initialize Firebase
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
 
 // Redirect helpers
 const isLoginPage = window.location.pathname === '/' || window.location.pathname.endsWith('index.html');
