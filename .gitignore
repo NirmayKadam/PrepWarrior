@@ -9,6 +9,22 @@
 *.ipr
 *.iws
 
+# Eclipse / STS
+**/.apt_generated
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings/
+**/.springBeans
+**/.sts4-cache
+
+# NetBeans
+**/nbproject/private/
+**/nbbuild/
+**/dist/
+**/nbdist/
+**/.nb-gradle/
+
 # OS files
 .DS_Store
 Thumbs.db
@@ -17,6 +33,14 @@ Thumbs.db
 **/target/
 **/build/
 .mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Project specific ignores
+**/HELP.md
 
 # Crash logs
 *.log
+
