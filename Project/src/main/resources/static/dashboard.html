@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - PrepWarrior</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <a href="/" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                <span class="logo-text">PrepWarrior</span>
+            </a>
+            <nav class="nav-links">
+                <a href="/dashboard" class="nav-link active">Dashboard</a>
+                <a href="/dashboard/questions" class="nav-link">Custom Questions</a>
+                <span id="user-display-email" style="font-size: 0.85rem; color: var(--text-secondary); border-left: 1px solid var(--glass-border); padding-left: 16px;">Loading user...</span>
+                <button onclick="logOut()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem; margin-left: 8px;">Sign Out</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <main class="container" style="padding-top: 40px; padding-bottom: 60px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px;">
+            <div>
+                <h1 style="font-size: 2.2rem; margin-bottom: 8px;">Candidate Dashboard</h1>
+                <p style="color: var(--text-secondary);">Manage and take mock interviews, or generate tailored question sheets.</p>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button onclick="openModal('interview-modal')" class="btn btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Mock Interview
+                </button>
+                <button onclick="openModal('questions-modal')" class="btn btn-secondary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    New Questions Sheet
+                </button>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Interviews List -->
+            <div>
+                <h2 style="font-size: 1.5rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg> Your Mock Interviews
+                </h2>
+                <div id="interviews-list" class="card-list">
+                    <div class="glass-panel" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                        Loading interviews...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Questions Bank -->
+            <div>
+                <h2 style="font-size: 1.5rem; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Custom Question Sheets
+                </h2>
+                <div id="questions-list" class="card-list">
+                    <div class="glass-panel" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                        Loading question sheets...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal: New Mock Interview -->
+    <div id="interview-modal" class="modal-overlay">
+        <div class="modal-container glass-panel">
+            <div class="modal-header">
+                <h3 style="font-size: 1.4rem;">New Mock Interview</h3>
+                <button onclick="closeModal('interview-modal')" class="modal-close">&times;</button>
+            </div>
+            <form id="interview-form" onsubmit="createInterview(event)">
+                <div class="form-group">
+                    <label class="form-label" for="int-position">Job Position / Title</label>
+                    <input type="text" id="int-position" class="form-control" required placeholder="e.g. Full Stack Developer">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="int-desc">Job Description / Tech Stack</label>
+                    <textarea id="int-desc" class="form-control" required placeholder="e.g. React, Node.js, Spring Boot, MySQL"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="int-experience">Years of Experience</label>
+                    <input type="number" id="int-experience" class="form-control" required min="0" max="50" placeholder="e.g. 3">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
+                    <button type="button" onclick="closeModal('interview-modal')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" id="interview-submit" class="btn btn-primary">Generate Interview</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: New Questions Bank -->
+    <div id="questions-modal" class="modal-overlay">
+        <div class="modal-container glass-panel">
+            <div class="modal-header">
+                <h3 style="font-size: 1.4rem;">Generate Questions Sheet</h3>
+                <button onclick="closeModal('questions-modal')" class="modal-close">&times;</button>
+            </div>
+            <form id="questions-form" onsubmit="createQuestionsSheet(event)">
+                <div class="form-group">
+                    <label class="form-label" for="q-position">Job Position / Title</label>
+                    <input type="text" id="q-position" class="form-control" required placeholder="e.g. Frontend Engineer">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="q-desc">Job Description / Tech Stack</label>
+                    <textarea id="q-desc" class="form-control" required placeholder="e.g. React, Redux, TailwindCSS"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="q-experience">Years of Experience</label>
+                    <input type="number" id="q-experience" class="form-control" required min="0" max="50" placeholder="e.g. 2">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="q-type">Question Type</label>
+                    <select id="q-type" class="form-control">
+                        <option value="Technical">Technical Questions</option>
+                        <option value="Behavioral">Behavioral Questions</option>
+                        <option value="Conceptual">Conceptual Questions</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="q-company">Target Company</label>
+                    <input type="text" id="q-company" class="form-control" required placeholder="e.g. Google, Netflix, Amazon">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
+                    <button type="button" onclick="closeModal('questions-modal')" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" id="questions-submit" class="btn btn-primary">Generate Sheet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast-msg">
+        <span id="toast-text">Success!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 PrepWarrior Platform. Self-contained Spring Boot Application.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="/auth.js"></script>
+    <script>
+        // Toast Helper
+        function showToast(text, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            toastText.innerText = text;
+            toast.className = "toast-msg toast-" + type + " active";
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 3000);
+        }
+
+        // Modal Helpers
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Fetch Dashboard Data
+        async function loadDashboard() {
+            // 1. Fetch Mock Interviews
+            const intListEl = document.getElementById('interviews-list');
+            try {
+                const res = await authenticatedFetch('/api/interviews/list');
+                if (res.ok) {
+                    const interviews = await res.json();
+                    if (interviews.length === 0) {
+                        intListEl.innerHTML = `
+                            <div class="glass-panel" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                                No mock interviews generated yet. Click "New Mock Interview" above.
+                            </div>
+                        `;
+                    } else {
+                        intListEl.innerHTML = interviews.map(item => `
+                            <a href="/dashboard/interview/${item.mockId}" class="item-card glass-panel">
+                                <div class="item-info">
+                                    <h3>${escapeHtml(item.jobPosition)}</h3>
+                                    <p>${escapeHtml(item.jobExperience)} Years Exp &bull; ${escapeHtml(item.jobDesc.substring(0, 50))}${item.jobDesc.length > 50 ? '...' : ''}</p>
+                                </div>
+                                <div class="item-meta">
+                                    <span class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">View</span>
+                                    <div class="item-date" style="margin-top: 8px;">${escapeHtml(item.createdAt)}</div>
+                                </div>
+                            </a>
+                        `).join('');
+                    }
+                } else {
+                    intListEl.innerHTML = `<div class="glass-panel" style="padding: 40px; text-align: center; color: var(--error);">Failed to load interviews.</div>`;
+                }
+            } catch (err) {
+                intListEl.innerHTML = `<div class="glass-panel" style="padding: 40px; text-align: center; color: var(--error);">Error connecting to backend.</div>`;
+            }
+
+            // 2. Fetch Custom Questions Sheet
+            const qListEl = document.getElementById('questions-list');
+            try {
+                const res = await authenticatedFetch('/api/questions/list');
+                if (res.ok) {
+                    const sheets = await res.json();
+                    if (sheets.length === 0) {
+                        qListEl.innerHTML = `
+                            <div class="glass-panel" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                                No custom question sheets generated yet. Click "New Questions Sheet" above.
+                            </div>
+                        `;
+                    } else {
+                        qListEl.innerHTML = sheets.map(item => `
+                            <a href="/dashboard/questions?id=${item.mockId}" class="item-card glass-panel">
+                                <div class="item-info">
+                                    <h3>${escapeHtml(item.jobPosition)}</h3>
+                                    <p>${escapeHtml(item.company)} &bull; ${escapeHtml(item.typeQuestion)}</p>
+                                </div>
+                                <div class="item-meta">
+                                    <span class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;">Open</span>
+                                    <div class="item-date" style="margin-top: 8px;">${escapeHtml(item.createdAt)}</div>
+                                </div>
+                            </a>
+                        `).join('');
+                    }
+                } else {
+                    qListEl.innerHTML = `<div class="glass-panel" style="padding: 40px; text-align: center; color: var(--error);">Failed to load question sheets.</div>`;
+                }
+            } catch (err) {
+                qListEl.innerHTML = `<div class="glass-panel" style="padding: 40px; text-align: center; color: var(--error);">Error connecting to backend.</div>`;
+            }
+        }
+
+        // Post Interview
+        async function createInterview(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('interview-submit');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Generating with AI...";
+
+            const jobPosition = document.getElementById('int-position').value;
+            const jobDesc = document.getElementById('int-desc').value;
+            const jobExperience = document.getElementById('int-experience').value;
+
+            try {
+                const res = await authenticatedFetch('/api/interviews', {
+                    method: 'POST',
+                    body: JSON.stringify({ jobPosition, jobDesc, jobExperience })
+                });
+                
+                const data = await res.json();
+                if (res.ok && data.mockId) {
+                    showToast("Interview created successfully!", "success");
+                    closeModal('interview-modal');
+                    document.getElementById('interview-form').reset();
+                    setTimeout(() => {
+                        window.location.href = `/dashboard/interview/${data.mockId}`;
+                    }, 500);
+                } else {
+                    showToast(data.error || "Failed to create interview.", "error");
+                }
+            } catch (err) {
+                showToast("Connection to server failed.", "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Generate Interview";
+            }
+        }
+
+        // Post Questions Sheet
+        async function createQuestionsSheet(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('questions-submit');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Generating Sheet...";
+
+            const jobPosition = document.getElementById('q-position').value;
+            const jobDesc = document.getElementById('q-desc').value;
+            const jobExperience = document.getElementById('q-experience').value;
+            const typeQuestion = document.getElementById('q-type').value;
+            const company = document.getElementById('q-company').value;
+
+            try {
+                const res = await authenticatedFetch('/api/questions', {
+                    method: 'POST',
+                    body: JSON.stringify({ jobPosition, jobDesc, jobExperience, typeQuestion, company })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.mockId) {
+                    showToast("Question bank generated successfully!", "success");
+                    closeModal('questions-modal');
+                    document.getElementById('questions-form').reset();
+                    setTimeout(() => {
+                        window.location.href = `/dashboard/questions?id=${data.mockId}`;
+                    }, 500);
+                } else {
+                    showToast(data.error || "Failed to generate question bank.", "error");
+                }
+            } catch (err) {
+                showToast("Connection to server failed.", "error");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "Generate Sheet";
+            }
+        }
+
+        // HTML Escape Helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initial setup
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('user-display-email').innerText = user.email;
+                loadDashboard();
+            }
+        });
+    </script>
+</body>
+</html>

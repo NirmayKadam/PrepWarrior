@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Session - PrepWarrior</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <a href="/" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                <span class="logo-text">PrepWarrior</span>
+            </a>
+            <nav class="nav-links">
+                <a href="/dashboard" class="nav-link active">Dashboard</a>
+                <a href="/dashboard/questions" class="nav-link">Custom Questions</a>
+                <span id="user-display-email" style="font-size: 0.85rem; color: var(--text-secondary); border-left: 1px solid var(--glass-border); padding-left: 16px;">Loading user...</span>
+                <button onclick="logOut()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem; margin-left: 8px;">Sign Out</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <main class="container">
+        <div id="loader" style="text-align: center; color: var(--text-secondary); padding: 80px 0;">
+            Initializing interview questions...
+        </div>
+
+        <div id="interview-container" class="interview-room" style="display: none;">
+            <!-- Question Panel -->
+            <div class="glass-panel question-panel">
+                <div class="question-header">
+                    <span>Active Interview</span>
+                    <span id="question-counter">Question 1 of 5</span>
+                </div>
+                
+                <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px;">
+                    <div id="active-question-text" class="question-text" style="flex: 1; margin-bottom: 0;">Loading question...</div>
+                    <button onclick="speakQuestion()" class="btn btn-secondary" style="padding: 8px 12px; border-radius: 50%; font-size: 1.1rem; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;" title="Read out loud">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                    </button>
+                </div>
+
+                <div class="answer-guidelines">
+                    <strong>Instructions:</strong> Record your answer by clicking "Start Recording". When finished, click "Stop". You can edit the text transcription before submitting.
+                </div>
+
+                <!-- Answer Entry Area -->
+                <div class="form-group" style="margin-top: 24px;">
+                    <label class="form-label" for="user-answer-text">Your Answer:</label>
+                    <textarea id="user-answer-text" class="form-control" placeholder="Your recorded or typed answer will appear here..." style="min-height: 150px; font-size: 1.05rem; line-height: 1.5;"></textarea>
+                </div>
+
+                <!-- Action Controls -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 32px;">
+                    <div class="controls">
+                        <button id="btn-record" onclick="toggleRecording()" class="btn btn-primary" style="background: var(--secondary); box-shadow: 0 4px 14px 0 rgba(236, 72, 153, 0.3); display: inline-flex; align-items: center; gap: 8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg> Start Recording
+                        </button>
+                        <div id="recording-indicator" style="display: none; align-items: center; gap: 10px; color: var(--secondary); font-weight: 600; font-size: 0.95rem;">
+                            <div class="audio-waves">
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                            </div>
+                            Recording...
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button id="btn-submit" onclick="submitAnswer()" class="btn btn-primary">
+                            Save & Next Question
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Media Preview Panel -->
+            <div class="media-panel">
+                <div class="camera-wrapper glass-panel">
+                    <video id="webcam" autoplay playsinline muted style="display: none;"></video>
+                    <div id="camera-placeholder" class="camera-placeholder">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                        <p style="font-size: 0.95rem;">Camera Preview is Off</p>
+                    </div>
+                </div>
+                <button id="btn-camera" onclick="toggleCamera()" class="btn btn-secondary" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Enable Camera Preview
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast-msg">
+        <span id="toast-text">Success!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 PrepWarrior Platform. Self-contained Spring Boot Application.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="/auth.js"></script>
+    <script>
+        let interviewId = null;
+        let questions = [];
+        let currentIndex = 0;
+        let isRecording = false;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let stream = null;
+        let cameraStream = null;
+
+        // Toast Helper
+        function showToast(text, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            toastText.innerText = text;
+            toast.className = "toast-msg toast-" + type + " active";
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 3000);
+        }
+
+        // Load Questions
+        async function loadInterviewSession() {
+            const pathParts = window.location.pathname.split('/');
+            interviewId = pathParts[pathParts.length - 2];
+            
+            if (!interviewId) {
+                showToast("No interview session ID found", "error");
+                document.getElementById('loader').innerText = "Invalid Interview Session ID.";
+                return;
+            }
+
+            try {
+                const res = await authenticatedFetch(`/api/interviews/${interviewId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    questions = JSON.parse(data.jsonMockResp);
+                    if (questions && questions.length > 0) {
+                        displayQuestion();
+                        document.getElementById('loader').style.display = 'none';
+                        document.getElementById('interview-container').style.display = 'grid';
+                    } else {
+                        document.getElementById('loader').innerText = "No interview questions generated.";
+                    }
+                } else {
+                    document.getElementById('loader').innerText = "Failed to load session details.";
+                    showToast("Error loading questions", "error");
+                }
+            } catch (err) {
+                document.getElementById('loader').innerText = "Error connecting to server.";
+                showToast("Connection failed", "error");
+            }
+        }
+
+        function displayQuestion() {
+            document.getElementById('question-counter').innerText = `Question ${currentIndex + 1} of ${questions.length}`;
+            document.getElementById('active-question-text').innerText = questions[currentIndex].Question;
+            document.getElementById('user-answer-text').value = '';
+            
+            const submitBtn = document.getElementById('btn-submit');
+            if (currentIndex === questions.length - 1) {
+                submitBtn.innerText = "Save & Finish Interview";
+            } else {
+                submitBtn.innerText = "Save & Next Question";
+            }
+        }
+
+        // Text To Speech
+        function speakQuestion() {
+            if ('speechSynthesis' in window) {
+                const synth = window.speechSynthesis;
+                synth.cancel();
+                const text = questions[currentIndex].Question;
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                
+                synth.speak(utterance);
+            } else {
+                showToast("Text-to-speech not supported in this browser.", "error");
+            }
+        }
+
+        // Camera Preview Toggle
+        async function toggleCamera() {
+            const videoEl = document.getElementById('webcam');
+            const placeholderEl = document.getElementById('camera-placeholder');
+            const camBtn = document.getElementById('btn-camera');
+
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+                videoEl.srcObject = null;
+                videoEl.style.display = 'none';
+                placeholderEl.style.display = 'flex';
+                camBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Enable Camera Preview';
+                camBtn.className = "btn btn-secondary";
+            } else {
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    videoEl.srcObject = cameraStream;
+                    videoEl.style.display = 'block';
+                    placeholderEl.style.display = 'none';
+                    camBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg> Disable Camera Preview';
+                    camBtn.className = "btn btn-danger";
+                } catch (err) {
+                    showToast("Could not access webcam permissions.", "error");
+                }
+            }
+        }
+
+        // Audio Recording controls
+        async function toggleRecording() {
+            const recordBtn = document.getElementById('btn-record');
+            const indicator = document.getElementById('recording-indicator');
+
+            if (isRecording) {
+                isRecording = false;
+                recordBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg> Start Recording';
+                recordBtn.style.background = "var(--secondary)";
+                indicator.style.display = 'none';
+                mediaRecorder.stop();
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+            } else {
+                try {
+                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = event => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        await transcribeAudio(audioBlob);
+                    };
+
+                    isRecording = true;
+                    recordBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/></svg> Stop Recording';
+                    recordBtn.style.background = "var(--error)";
+                    indicator.style.display = 'flex';
+                    mediaRecorder.start();
+                } catch (err) {
+                    showToast("Microphone access denied or not connected.", "error");
+                }
+            }
+        }
+
+        // Transcribe Audio via backend API
+        async function transcribeAudio(blob) {
+            showToast("Transcribing audio answer...", "success");
+            const formData = new FormData();
+            formData.append('audio', blob, 'recording.webm');
+
+            try {
+                const res = await authenticatedFetch('/api/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('user-answer-text').value = data.transcription;
+                    showToast("Transcription complete!", "success");
+                } else {
+                    const errData = await res.json();
+                    showToast(errData.error || "Transcription failed.", "error");
+                }
+            } catch (err) {
+                showToast("Failed to connect to transcription service.", "error");
+            }
+        }
+
+        // Save Answer and load next
+        async function submitAnswer() {
+            const userAns = document.getElementById('user-answer-text').value;
+            if (!userAns || userAns.trim() === '') {
+                showToast("Please write or record an answer first.", "error");
+                return;
+            }
+
+            const submitBtn = document.getElementById('btn-submit');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Evaluating answer...";
+
+            const question = questions[currentIndex].Question;
+            const correctAns = questions[currentIndex].Answer;
+
+            try {
+                const res = await authenticatedFetch(`/api/interviews/${interviewId}/answer`, {
+                    method: 'POST',
+                    body: JSON.stringify({ question, correctAns, userAns })
+                });
+
+                if (res.ok) {
+                    showToast("Answer saved successfully!", "success");
+                    window.speechSynthesis.cancel();
+
+                    if (currentIndex < questions.length - 1) {
+                        currentIndex++;
+                        displayQuestion();
+                    } else {
+                        showToast("Interview complete! Redirecting to report...", "success");
+                        setTimeout(() => {
+                            window.location.href = `/dashboard/interview/${interviewId}/feedback`;
+                        }, 1000);
+                    }
+                } else {
+                    const errData = await res.json();
+                    showToast(errData.error || "Failed to save answer.", "error");
+                }
+            } catch (err) {
+                showToast("Connection to backend failed.", "error");
+            } finally {
+                submitBtn.disabled = false;
+                if (currentIndex === questions.length - 1) {
+                    submitBtn.innerText = "Save & Finish Interview";
+                } else {
+                    submitBtn.innerText = "Save & Next Question";
+                }
+            }
+        }
+
+        // Monitor auth state and load details
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('user-display-email').innerText = user.email;
+                loadInterviewSession();
+            }
+        });
+        
+        // Clean up media streams if user closes page abruptly
+        window.onbeforeunload = function() {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            if (cameraStream) cameraStream.getTracks().forEach(track => track.stop());
+        }
+    </script>
+</body>
+</html>

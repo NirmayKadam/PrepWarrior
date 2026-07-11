@@ -1,0 +1,22 @@
+# Environments
+.env
+.env*.local
+
+# IDEs and editors
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build outputs
+**/target/
+**/build/
+.mvn/wrapper/maven-wrapper.jar
+
+# Crash logs
+*.log

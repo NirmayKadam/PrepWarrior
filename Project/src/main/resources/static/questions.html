@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Question Sheet - PrepWarrior</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <a href="/" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                <span class="logo-text">PrepWarrior</span>
+            </a>
+            <nav class="nav-links">
+                <a href="/dashboard" class="nav-link">Dashboard</a>
+                <a href="/dashboard/questions" class="nav-link active">Custom Questions</a>
+                <span id="user-display-email" style="font-size: 0.85rem; color: var(--text-secondary); border-left: 1px solid var(--glass-border); padding-left: 16px;">Loading user...</span>
+                <button onclick="logOut()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem; margin-left: 8px;">Sign Out</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <main class="container" style="padding-top: 40px; padding-bottom: 60px;">
+        <div id="loader" style="text-align: center; color: var(--text-secondary); padding: 80px 0;">
+            Retrieving questions sheet...
+        </div>
+
+        <div id="questions-content" style="display: none;">
+            <div style="margin-bottom: 40px;">
+                <h1 id="sheet-title" style="font-size: 2.2rem; margin-bottom: 8px;">Job Position Questions</h1>
+                <p id="sheet-subtitle" style="color: var(--text-secondary); font-size: 1.1rem;"></p>
+            </div>
+
+            <!-- List of Questions -->
+            <div id="questions-list">
+                <!-- Injected dynamically -->
+            </div>
+
+            <div style="display: flex; justify-content: flex-start; margin-top: 40px;">
+                <a href="/dashboard" class="btn btn-primary" style="padding: 14px 32px;">Back to Dashboard</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast-msg">
+        <span id="toast-text">Success!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 PrepWarrior Platform. Self-contained Spring Boot Application.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="/auth.js"></script>
+    <script>
+        let sheetId = null;
+
+        // Toast Helper
+        function showToast(text, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            toastText.innerText = text;
+            toast.className = "toast-msg toast-" + type + " active";
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 3000);
+        }
+
+        // Load Custom Questions
+        async function loadQuestions() {
+            const urlParams = new URLSearchParams(window.location.search);
+            sheetId = urlParams.get('id');
+
+            if (!sheetId) {
+                document.getElementById('loader').innerHTML = `
+                    <div class="glass-panel" style="padding: 60px; text-align: center;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 12px;">Custom Questions Viewer</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 24px;">Please select a question sheet from your dashboard to view.</p>
+                        <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const res = await authenticatedFetch(`/api/questions/${sheetId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    document.getElementById('sheet-title').innerText = `${data.jobPosition} - ${data.company}`;
+                    document.getElementById('sheet-subtitle').innerText = `${data.typeQuestion} Questions Bank (${data.jobExperience} Years Exp)`;
+
+                    const parsedQuestions = JSON.parse(data.mockQuestionJsonResp);
+                    const listEl = document.getElementById('questions-list');
+                    
+                    listEl.innerHTML = parsedQuestions.map((item, idx) => `
+                        <div class="qa-card glass-panel">
+                            <h3 style="font-size: 1.2rem; margin-bottom: 16px; color: var(--primary);">Question ${idx + 1}</h3>
+                            <h4 style="font-size: 1.15rem; line-height: 1.5; font-weight: 600; margin-bottom: 20px;">${escapeHtml(item.Question)}</h4>
+                            
+                            <div class="qa-block qa-block-correct">
+                                <p style="font-size: 0.85rem; color: var(--accent); font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Correct / Reference Answer:</p>
+                                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">${escapeHtml(item.Answer)}</p>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('questions-content').style.display = 'block';
+                } else {
+                    document.getElementById('loader').innerText = "Questions bank not found.";
+                    showToast("Failed to fetch questions.", "error");
+                }
+            } catch (err) {
+                document.getElementById('loader').innerText = "Error connecting to server.";
+                showToast("Connection failed", "error");
+            }
+        }
+
+        // HTML Escape Helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Monitor auth state and load details
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('user-display-email').innerText = user.email;
+                loadQuestions();
+            }
+        });
+        window.loadQuestions = loadQuestions; // Bind globally for profile switcher
+    </script>
+</body>
+</html>

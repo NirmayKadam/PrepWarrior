@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Feedback - PrepWarrior</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div class="glow-orb glow-orb-1"></div>
+    <div class="glow-orb glow-orb-2"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <a href="/" class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>
+                <span class="logo-text">PrepWarrior</span>
+            </a>
+            <nav class="nav-links">
+                <a href="/dashboard" class="nav-link active">Dashboard</a>
+                <a href="/dashboard/questions" class="nav-link">Custom Questions</a>
+                <span id="user-display-email" style="font-size: 0.85rem; color: var(--text-secondary); border-left: 1px solid var(--glass-border); padding-left: 16px;">Loading user...</span>
+                <button onclick="logOut()" class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.9rem; margin-left: 8px;">Sign Out</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Content -->
+    <main class="container" style="padding-top: 40px; padding-bottom: 60px;">
+        <div style="margin-bottom: 40px;">
+            <h1 style="font-size: 2.2rem; margin-bottom: 8px;">Interview Feedback Report</h1>
+            <p style="color: var(--text-secondary);">Analyze your performance, scores, and Gemini AI's constructive feedback.</p>
+        </div>
+
+        <div id="loader" style="text-align: center; color: var(--text-secondary); padding: 60px 0;">
+            Compiling feedback data...
+        </div>
+
+        <div id="feedback-content" style="display: none;">
+            <!-- Summary Stats Card -->
+            <div class="glass-panel feedback-summary">
+                <div class="summary-stat" style="border-right: 1px solid var(--glass-border);">
+                    <div id="overall-rating" class="summary-number">0.0</div>
+                    <div style="color: var(--text-secondary); font-weight: 500; font-size: 0.95rem;">Average Rating / 10</div>
+                </div>
+                <div class="summary-stat">
+                    <div id="answered-count" class="summary-number" style="color: var(--secondary);">0</div>
+                    <div style="color: var(--text-secondary); font-weight: 500; font-size: 0.95rem;">Questions Evaluated</div>
+                </div>
+            </div>
+
+            <!-- List of Questions and Answers -->
+            <h2 style="font-size: 1.5rem; margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Detailed Breakdown
+            </h2>
+            
+            <div id="feedback-list">
+                <!-- Injected dynamically -->
+            </div>
+
+            <div style="display: flex; justify-content: flex-start; margin-top: 40px;">
+                <a href="/dashboard" class="btn btn-primary" style="padding: 14px 32px;">Return to Dashboard</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast-msg">
+        <span id="toast-text">Success!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 PrepWarrior Platform. Self-contained Spring Boot Application.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <!-- Scripts -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="/auth.js"></script>
+    <script>
+        let interviewId = null;
+
+        // Toast Helper
+        function showToast(text, type = "success") {
+            const toast = document.getElementById('toast');
+            const toastText = document.getElementById('toast-text');
+            toastText.innerText = text;
+            toast.className = "toast-msg toast-" + type + " active";
+            setTimeout(() => {
+                toast.classList.remove('active');
+            }, 3000);
+        }
+
+        // Load Feedback List
+        async function loadFeedback() {
+            const pathParts = window.location.pathname.split('/');
+            interviewId = pathParts[pathParts.length - 2];
+
+            if (!interviewId) {
+                showToast("No interview ID found", "error");
+                document.getElementById('loader').innerText = "Invalid Interview ID.";
+                return;
+            }
+
+            try {
+                const res = await authenticatedFetch(`/api/interviews/${interviewId}/feedback`);
+                if (res.ok) {
+                    const answers = await res.json();
+                    
+                    if (answers.length === 0) {
+                        document.getElementById('loader').innerText = "No evaluation answers recorded for this interview session.";
+                        return;
+                    }
+
+                    // Calculate Summary
+                    let totalRating = 0;
+                    answers.forEach(item => {
+                        let parsedRating = parseFloat(item.rating);
+                        if (isNaN(parsedRating)) parsedRating = 0;
+                        totalRating += parsedRating;
+                    });
+                    const avgRating = (totalRating / answers.length).toFixed(1);
+
+                    document.getElementById('overall-rating').innerText = avgRating;
+                    document.getElementById('answered-count').innerText = answers.length;
+
+                    // Populate Cards
+                    const listEl = document.getElementById('feedback-list');
+                    listEl.innerHTML = answers.map((item, idx) => `
+                        <div class="qa-card glass-panel">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                                <h3 style="font-size: 1.25rem;">Question ${idx + 1}</h3>
+                                <span class="rating-pill">Score: ${escapeHtml(item.rating)}/10</span>
+                            </div>
+                            <h4 style="font-size: 1.15rem; line-height: 1.5; font-weight: 600;">${escapeHtml(item.question)}</h4>
+                            
+                            <div class="qa-block qa-block-ans">
+                                <p style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Your Answer:</p>
+                                <p style="color: var(--text-secondary); font-size: 0.95rem;">${escapeHtml(item.userAns)}</p>
+                            </div>
+                            
+                            <div class="qa-block qa-block-correct" style="margin-top: 16px;">
+                                <p style="font-size: 0.85rem; color: var(--accent); font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Ideal Answer Benchmark:</p>
+                                <p style="color: var(--text-secondary); font-size: 0.95rem;">${escapeHtml(item.correctAns)}</p>
+                            </div>
+                            
+                            <div class="qa-block qa-block-feedback" style="margin-top: 16px;">
+                                <p style="font-size: 0.85rem; color: var(--primary); font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">Gemini Feedback:</p>
+                                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">${escapeHtml(item.feedback)}</p>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    document.getElementById('loader').style.display = 'none';
+                    document.getElementById('feedback-content').style.display = 'block';
+                } else {
+                    document.getElementById('loader').innerText = "Failed to load feedback from server.";
+                    showToast("Failed to fetch report.", "error");
+                }
+            } catch (err) {
+                document.getElementById('loader').innerText = "Error connecting to server.";
+                showToast("Connection failed", "error");
+            }
+        }
+
+        // HTML Escape Helper
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Monitor auth state and load details
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                document.getElementById('user-display-email').innerText = user.email;
+                loadFeedback();
+            }
+        });
+    </script>
+</body>
+</html>

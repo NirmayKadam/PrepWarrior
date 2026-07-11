@@ -1,0 +1,65 @@
+services:
+  app:
+    build:
+      context: ./Project
+      dockerfile: Dockerfile
+    container_name: mock-interview-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - ./Project/src/main/resources/static:/app/static
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - FIREBASE_CONFIG_B64=${FIREBASE_CONFIG_B64}
+      - SPRING_WEB_RESOURCES_STATIC_LOCATIONS=file:/app/static/,classpath:/static/
+      - SPRING_RESOURCES_STATIC_LOCATIONS=file:/app/static/,classpath:/static/
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=interviewdb
+      - DB_USER=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: mock-interview-redis
+    ports:
+      - "6379:6379"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:alpine
+    container_name: mock-interview-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: interviewdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+
