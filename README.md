@@ -7,10 +7,10 @@ An AI-powered mock interview application built with **Spring Boot 4.1** and **Go
 ## Detailed Documentation
 
 Find comprehensive project documentation under the [documents/](./documents) directory:
-- [System Architecture](./documents/architecture.md) — High-level architecture, components, and data flow.
-- [API Reference](./documents/api.md) — Exhaustive REST endpoint specifications with payload contracts.
-- [Database & Caching](./documents/database.md) — JPA entity schemas, database layout, indexing, and Redis rate limit cache.
-- [Setup & Installation](./documents/setup.md) — Prerequisites, environment variables, local run scripts, and Docker Compose guidance.
+- [System Architecture](./documents/architecture.md) — Problem statement, solution design, layered monolith architecture, MVC pattern mapped to code, security pipeline (Firebase JWT + Redis rate limiting), AI integration architecture, data flow diagrams, deployment topology, design patterns used, and key design decisions with trade-off analysis.
+- [API Reference](./documents/api.md) — Every REST endpoint with code paths, validation rules, request/response schemas, error scenarios, authentication flow, rate limiting details, and cURL examples. Explains how controllers fit into MVC and the DTO pattern.
+- [Database & Caching](./documents/database.md) — ORM concepts (JPA/Hibernate/Spring Data), complete entity-to-table mappings, ER diagrams, indexing strategy with performance analysis, Repository Pattern with query derivation, HikariCP connection pool tuning, Redis rate limiting store, schema management (DDL auto), Lombok code generation, and data design trade-offs.
+- [Setup & Installation](./documents/setup.md) — Prerequisites, complete environment variable reference, Firebase/Gemini/Redis setup guides, local development (minimal and full), Docker Compose deployment, multi-stage Dockerfile walkthrough, Maven build process, `application.properties` reference, and troubleshooting guide.
 
 ---
 

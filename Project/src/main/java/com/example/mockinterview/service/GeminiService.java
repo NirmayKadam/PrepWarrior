@@ -9,8 +9,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MimeTypeUtils;
 
-import java.util.List;
-
 @Service
 public class GeminiService {
 
@@ -37,14 +35,16 @@ public class GeminiService {
         return callModelAndCleanJson(prompt);
     }
 
-    public String generateCompanyQuestions(String jobPosition, String jobDesc, String jobExperience, String typeQuestion, String company) {
+    public String generateCompanyQuestions(String jobPosition, String jobDesc, String jobExperience,
+            String typeQuestion, String company) {
         String prompt = "Given the following details:\n" +
                 "- Job Position: " + jobPosition + "\n" +
                 "- Job Description: " + jobDesc + "\n" +
                 "- Years of Experience: " + jobExperience + "\n" +
                 "- Type of Question: " + typeQuestion + "\n" +
                 "- Previous Questions from this Company: " + company + "\n\n" +
-                "Please generate 5 interview questions relevant to the job position, experience level, and question type provided. Each question should be accompanied by a comprehensive answer. The output should be in JSON format with \"Question\" and \"Answer\" as fields.\n\n" +
+                "Please generate 5 interview questions relevant to the job position, experience level, and question type provided. Each question should be accompanied by a comprehensive answer. The output should be in JSON format with \"Question\" and \"Answer\" as fields.\n\n"
+                +
                 "Example format:\n" +
                 "[\n" +
                 "  {\n" +
