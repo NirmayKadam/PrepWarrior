@@ -34,10 +34,12 @@ public class MockInterviewController {
         this.objectMapper = new ObjectMapper();
     }
 
+    private static final int MAX_ANSWER_LENGTH = 5000;
+
     @PostMapping
     public ResponseEntity<?> createInterview(@RequestBody CreateInterviewRequest request,
                                              java.security.Principal principal) throws Exception {
-        String userEmail = (principal != null) ? principal.getName() : "user@example.com";
+        String userEmail = principal.getName();
         String jobPosition = request.getJobPosition();
         String jobDesc = request.getJobDesc();
         String jobExperience = request.getJobExperience();
@@ -94,19 +96,18 @@ public class MockInterviewController {
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("mockId", mockId));
     }
 
-    // GET /api/interviews/{id} — fetch a single interview by ID
+    // GET /api/interviews/{id} — fetch a single interview by ID (owner only)
     @GetMapping("/{id}")
-    public ResponseEntity<?> getInterview(@PathVariable("id") String id) {
-        return mockInterviewRepository.findByMockId(id)
+    public ResponseEntity<?> getInterview(@PathVariable("id") String id, java.security.Principal principal) {
+        return mockInterviewRepository.findByMockIdAndCreatedBy(id, principal.getName())
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Interview not found")));
+                .orElseGet(this::interviewNotFound);
     }
 
     // GET /api/interviews/list — fetch all interviews for the currently logged-in user
     @GetMapping("/list")
     public ResponseEntity<List<MockInterview>> listInterviews(java.security.Principal principal) {
-        String userEmail = (principal != null) ? principal.getName() : "user@example.com";
-        List<MockInterview> interviews = mockInterviewRepository.findByCreatedByOrderByIdDesc(userEmail);
+        List<MockInterview> interviews = mockInterviewRepository.findByCreatedByOrderByIdDesc(principal.getName());
         return ResponseEntity.ok(interviews);
     }
 
@@ -115,7 +116,7 @@ public class MockInterviewController {
     public ResponseEntity<?> recordAnswer(@PathVariable("id") String id,
                                           @RequestBody RecordAnswerRequest request,
                                           java.security.Principal principal) throws Exception {
-        String userEmail = (principal != null) ? principal.getName() : "user@example.com";
+        String userEmail = principal.getName();
         String question = request.getQuestion();
         String correctAns = request.getCorrectAns();
         String userAns = request.getUserAns();
@@ -123,6 +124,15 @@ public class MockInterviewController {
         if (question == null || question.trim().isEmpty() ||
             userAns == null || userAns.trim().isEmpty()) {
             throw new IllegalArgumentException("question and userAns are required");
+        }
+
+        if (userAns.length() > MAX_ANSWER_LENGTH) {
+            throw new IllegalArgumentException("Answer must be at most " + MAX_ANSWER_LENGTH + " characters");
+        }
+
+        // Only the owner of the interview may submit answers to it
+        if (mockInterviewRepository.findByMockIdAndCreatedBy(id, userEmail).isEmpty()) {
+            return interviewNotFound();
         }
 
         // Build Gemini feedback
@@ -155,11 +165,19 @@ public class MockInterviewController {
         return ResponseEntity.ok(Map.of("feedback", feedback, "rating", rating));
     }
 
-    // GET /api/interviews/{id}/feedback — fetch all answers+feedback for an interview
+    // GET /api/interviews/{id}/feedback — fetch all answers+feedback for an interview (owner only)
     @GetMapping("/{id}/feedback")
-    public ResponseEntity<List<UserAnswer>> getFeedback(@PathVariable("id") String id) {
+    public ResponseEntity<?> getFeedback(@PathVariable("id") String id, java.security.Principal principal) {
+        if (mockInterviewRepository.findByMockIdAndCreatedBy(id, principal.getName()).isEmpty()) {
+            return interviewNotFound();
+        }
         List<UserAnswer> answers = userAnswerRepository.findByMockIdRefOrderByIdAsc(id);
         return ResponseEntity.ok(answers);
+    }
+
+    // 404 (not 403) so callers can't tell whether someone else's interview ID exists
+    private ResponseEntity<?> interviewNotFound() {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Interview not found"));
     }
 
     private String sanitize(String str) {

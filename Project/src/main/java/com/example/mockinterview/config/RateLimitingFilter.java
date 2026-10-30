@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -14,11 +16,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.time.Duration;
+import java.util.List;
 
 public class RateLimitingFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(RateLimitingFilter.class);
+
+    // INCR and EXPIRE in one atomic step, so a crash between the two can't leave a key without a TTL
+    private static final RedisScript<Long> INCR_WITH_TTL = new DefaultRedisScript<>(
+            "local count = redis.call('INCR', KEYS[1]) " +
+            "if count == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end " +
+            "return count",
+            Long.class);
+
     private final StringRedisTemplate redisTemplate;
 
     public RateLimitingFilter(StringRedisTemplate redisTemplate) {
@@ -42,10 +52,9 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             return;
         }
 
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.trim().isEmpty()) {
-            ip = request.getRemoteAddr();
-        }
+        // Don't read X-Forwarded-For directly: any client can set it to dodge the limit.
+        // Behind a trusted proxy, set server.forward-headers-strategy so getRemoteAddr() returns the real client IP.
+        String ip = request.getRemoteAddr();
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String limitKey;
@@ -61,10 +70,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
 
         try {
-            Long count = redisTemplate.opsForValue().increment(limitKey);
-            if (count != null && count == 1) {
-                redisTemplate.expire(limitKey, Duration.ofSeconds(windowSeconds));
-            }
+            Long count = redisTemplate.execute(INCR_WITH_TTL, List.of(limitKey), String.valueOf(windowSeconds));
 
             if (count != null && count > maxRequests) {
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());

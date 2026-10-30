@@ -5,7 +5,7 @@ import lombok.*;
 
 @Entity
 @Table(name = "question", indexes = {
-    @Index(name = "idx_question_mock_id", columnList = "mock_id"),
+    @Index(name = "idx_question_mock_id", columnList = "mock_id", unique = true),
     @Index(name = "idx_question_created_by", columnList = "created_by")
 })
 @Data

@@ -31,7 +31,7 @@ services:
     restart: unless-stopped
 
   redis:
-    image: redis:alpine
+    image: redis:8-alpine
     container_name: mock-interview-redis
     ports:
       - "6379:6379"
@@ -43,7 +43,9 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:alpine
+    # Pinned: the floating "alpine" tag jumped to Postgres 18, which moved its data dir
+    # and refuses to start with a volume mounted at the old /var/lib/postgresql/data path
+    image: postgres:18-alpine
     container_name: mock-interview-db
     ports:
       - "5432:5432"
@@ -52,7 +54,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql
     logging:
       driver: "json-file"
       options:

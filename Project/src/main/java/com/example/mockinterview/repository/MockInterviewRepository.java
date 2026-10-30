@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface MockInterviewRepository extends JpaRepository<MockInterview, Long> {
     Optional<MockInterview> findByMockId(String mockId);
+    Optional<MockInterview> findByMockIdAndCreatedBy(String mockId, String createdBy);
     List<MockInterview> findByCreatedByOrderByIdDesc(String createdBy);
 }

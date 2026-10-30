@@ -32,7 +32,7 @@ public class QuestionController {
     @PostMapping
     public ResponseEntity<?> createQuestions(@RequestBody CreateQuestionsRequest request,
                                              java.security.Principal principal) throws Exception {
-        String userEmail = (principal != null) ? principal.getName() : "user@example.com";
+        String userEmail = principal.getName();
         String jobPosition = request.getJobPosition();
         String jobDesc = request.getJobDesc();
         String jobExperience = request.getJobExperience();
@@ -82,10 +82,10 @@ public class QuestionController {
         return ResponseEntity.ok(Map.of("mockId", mockId));
     }
 
-    // GET /api/questions/{id} — fetch custom questions by ID
+    // GET /api/questions/{id} — fetch custom questions by ID (owner only)
     @GetMapping("/{id}")
-    public ResponseEntity<?> getQuestions(@PathVariable("id") String id) {
-        return questionRepository.findByMockId(id)
+    public ResponseEntity<?> getQuestions(@PathVariable("id") String id, java.security.Principal principal) {
+        return questionRepository.findByMockIdAndCreatedBy(id, principal.getName())
                 .<ResponseEntity<?>>map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Questions not found")));
     }
@@ -93,8 +93,7 @@ public class QuestionController {
     // GET /api/questions/list — fetch all custom questions for the currently logged-in user
     @GetMapping("/list")
     public ResponseEntity<java.util.List<Question>> listQuestions(java.security.Principal principal) {
-        String userEmail = (principal != null) ? principal.getName() : "user@example.com";
-        java.util.List<Question> questions = questionRepository.findByCreatedByOrderByIdDesc(userEmail);
+        java.util.List<Question> questions = questionRepository.findByCreatedByOrderByIdDesc(principal.getName());
         return ResponseEntity.ok(questions);
     }
 

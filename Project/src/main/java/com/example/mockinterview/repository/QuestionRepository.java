@@ -10,5 +10,6 @@ import java.util.Optional;
 @Repository
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     Optional<Question> findByMockId(String mockId);
+    Optional<Question> findByMockIdAndCreatedBy(String mockId, String createdBy);
     List<Question> findByCreatedByOrderByIdDesc(String createdBy);
 }

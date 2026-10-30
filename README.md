@@ -39,8 +39,8 @@ Find comprehensive project documentation under the [documents/](./documents) dir
 - **Audio Transcription** — Upload audio recordings and get them transcribed via Gemini's multimodal capabilities
 - **Company-Specific Question Bank** — Generate questions tailored to specific companies and question types
 - **Contact/Newsletter Form** — Built-in contact form with email validation and persistence
-- **H2 In-Memory Database** — Zero-config database with web console for development
-- **Docker Support** — Multi-stage Dockerfile and Docker Compose for containerized deployment
+- **Secure by default** — Firebase JWT authentication, owner-only access to interviews, Redis rate limiting
+- **Docker Support** — Multi-stage Dockerfile and Docker Compose (app + PostgreSQL + Redis)
 - **Global Exception Handling** — Centralized error handling with meaningful JSON error responses
 
 ---
@@ -52,7 +52,8 @@ Find comprehensive project documentation under the [documents/](./documents) dir
 | **Framework** | Spring Boot 4.1.0 |
 | **Language** | Java 21 |
 | **AI Integration** | Spring AI 2.0.0 + Google Gemini (`gemini-2.5-flash`) |
-| **Database** | H2 (in-memory, default) / PostgreSQL (production-ready) |
+| **Database** | PostgreSQL |
+| **Auth / Rate limiting** | Firebase Authentication (Admin SDK) / Redis |
 | **ORM** | Spring Data JPA + Hibernate |
 | **Build Tool** | Maven |
 | **Code Generation** | Lombok |
@@ -252,26 +253,15 @@ curl -X POST http://localhost:8080/api/transcribe \
 
 ## Database
 
-### Default: H2 In-Memory
+The app uses **PostgreSQL**, configured through environment variables:
 
-- Auto-configured, no setup needed
-- **H2 Console**: http://localhost:8080/h2-console
-  - JDBC URL: `jdbc:h2:mem:interviewdb`
-  - Username: `sa`
-  - Password: *(empty)*
-- Data resets on restart
+| Variable | Default |
+|---|---|
+| `DB_HOST` / `DB_PORT` / `DB_NAME` | `localhost` / `5432` / `interviewdb` |
+| `DB_USER` / `DB_PASSWORD` | `postgres` / `postgres` |
+| `DB_SSLMODE` | `disable` (set `require` for a hosted database) |
 
-### Production: PostgreSQL
-
-PostgreSQL driver included. Switch by updating `application.properties`:
-
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/interviewdb
-spring.datasource.driverClassName=org.postgresql.Driver
-spring.datasource.username=your_user
-spring.datasource.password=your_password
-spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
-```
+The easiest way to get a local database is `docker compose up -d postgres redis`. Tables are created automatically (`spring.jpa.hibernate.ddl-auto=update`).
 
 ---
 
@@ -331,9 +321,9 @@ Key properties in `application.properties`:
 |---|---|---|
 | `spring.ai.google.genai.api-key` | Gemini API key | `${GEMINI_API_KEY}` |
 | `spring.ai.google.genai.chat.options.model` | AI model | `gemini-2.5-flash` |
-| `spring.datasource.url` | Database JDBC URL | `jdbc:h2:mem:interviewdb` |
-| `spring.h2.console.enabled` | H2 web console | `true` |
+| `spring.datasource.url` | Database JDBC URL | `jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}` |
 | `spring.jpa.hibernate.ddl-auto` | Schema management | `update` |
+| `spring.servlet.multipart.max-file-size` | Max audio upload | `15MB` |
 
 ---
 
